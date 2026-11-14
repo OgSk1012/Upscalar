@@ -11,7 +11,8 @@
   .wrap { max-width:760px; margin:0 auto; padding:20px 16px 60px; }
   h1 { font-size:1.6rem; margin:8px 0 4px; }
   p.sub { color:var(--muted); margin:0 0 20px; }
-  #drop { border:2px dashed #3a4050; border-radius:16px; padding:36px 16px; text-align:center; background:var(--card); cursor:pointer; }
+  #drop { display:block; position:relative; color:var(--text); font-size:1rem; border:2px dashed #3a4050; border-radius:16px; padding:36px 16px; text-align:center; background:var(--card); cursor:pointer; }
+  #drop input { position:absolute; width:1px; height:1px; opacity:0; overflow:hidden; pointer-events:none; }
   #drop.over { border-color:var(--accent); }
   #drop strong { display:block; font-size:1.1rem; margin-bottom:6px; }
   .opts { display:flex; flex-wrap:wrap; gap:12px; margin:16px 0; align-items:center; }
@@ -33,11 +34,11 @@
   <h1>4K Maker</h1>
   <p class="sub">Images ya ZIP upload karo (100+ images bhi chalengi). Sab kuch aapke browser me hota hai, kuch upload nahi hota.</p>
 
-  <div id="drop">
+  <label id="drop" for="file">
     <strong>Images ya ZIP yahan drop karo / tap karo</strong>
     <span class="info">JPG, PNG, WEBP, ZIP (zip ke andar folders bhi chalenge)</span>
-    <input id="file" type="file" accept="image/*,.zip,application/zip" multiple hidden>
-  </div>
+    <input id="file" type="file" accept="image/*,.zip,application/zip" multiple>
+  </label>
 
   <div id="sources" style="margin-top:14px"></div>
 
@@ -61,76 +62,18 @@
         <option value="20">20</option>
         <option value="30" selected>30</option>
         <option value="50">50</option>
+        <option value="100">100</option>
+        <option value="200">200</option>
+        <option value="100000">Sab ek ZIP me (bahut RAM lagegi)</option>
       </select>
-    </label>
-    <button id="go" class="primary" disabled>4K banao</button>
-  </div>
-  <div id="warn">Bade kaam me ye tab khula rakho aur screen band mat karo.</div>
-
-  <div id="progress" hidden>
-    <div class="bar"><div id="barfill"></div></div>
-    <div class="info" id="ptext"></div>
-  </div>
-
-  <div id="results" style="margin-top:16px"></div>
-</div>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-<script>
-const TARGET = 3840; // lambi side = 3840px (4K UHD)
-const IMG_RE = /\.(jpe?g|png|webp|bmp|gif)$/i;
-const $ = id => document.getElementById(id);
-const drop = $('drop'), fileInput = $('file'), go = $('go');
-let jobs = []; // { name, getBlob }
-
-drop.onclick = () => fileInput.click();
-drop.ondragover = e => { e.preventDefault(); drop.classList.add('over'); };
-drop.ondragleave = () => drop.classList.remove('over');
-drop.ondrop = e => { e.preventDefault(); drop.classList.remove('over'); addFiles(e.dataTransfer.files); };
-fileInput.onchange = () => { addFiles(fileInput.files); fileInput.value = ''; };
-
-function addRow(title, detail) {
-  const el = document.createElement('div');
-  el.className = 'row';
-  el.innerHTML = '<div style="min-width:0"><div class="name"></div><div class="info"></div></div>';
-  el.querySelector('.name').textContent = title;
-  el.querySelector('.info').textContent = detail;
-  $('sources').appendChild(el);
-}
-
-async function addFiles(files) {
-  for (const f of files) {
-    const isZip = /\.zip$/i.test(f.name) || f.type.includes('zip');
-    if (isZip) {
-      try {
-        const zip = await JSZip.loadAsync(f);
-        let n = 0;
-        zip.forEach((path, entry) => {
-          if (entry.dir || path.startsWith('__MACOSX') || /(^|\/)\./.test(path) || !IMG_RE.test(path)) return;
-          jobs.push({ name: path, getBlob: () => entry.async('blob') });
-          n++;
-        });
-        addRow(f.name, n + ' images mili');
-      } catch (e) {
-        addRow(f.name, 'ZIP khul nahi payi');
-      }
-    } else if (f.type.startsWith('image/')) {
-      jobs.push({ name: f.name, getBlob: async () => f });
-      addRow(f.name, '1 image');
-    }
-  }
-  go.disabled = jobs.length === 0;
-}
-
-// Step-by-step upscale (har step max 2x) taaki quality achhi rahe
-  let zip = new JSZip(), inPart = 0, partNo = 1, done = 0, failed = [];
+  let zip = null, inPart = 0, partNo = 1, done = 0, failed = [];
 
   async function flush() {
     if (!inPart) return;
     $('ptext').textContent = 'ZIP ban rahi hai...';
     const blob = await zip.generateAsync({ type: 'blob', compression: 'STORE' });
     addResult(inPart + ' images', blob, '4k-images-part' + partNo + '.zip');
-    zip = new JSZip(); inPart = 0; partNo++;
+    zip = null; inPart = 0; partNo++;
   }
 
   for (const job of jobs) {
@@ -145,6 +88,7 @@ async function addFiles(files) {
       if (total === 1) {
         addResult(res.from + ' → ' + res.to, res.out, path.split('/').pop());
       } else {
+        if (!zip) zip = new JSZip();
         zip.file(path, res.out);
         inPart++;
         if (inPart >= perPart) await flush();
