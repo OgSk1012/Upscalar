@@ -40,32 +40,6 @@
     <input id="file" type="file" accept="image/*,.zip,application/zip" multiple>
   </label>
 
-  <div id="sources" style="margin-top:14px"></div>
-
-  <div class="opts">
-    <label>Format<br>
-      <select id="fmt">
-        <option value="image/jpeg">JPG (chhoti file, recommended)</option>
-        <option value="image/png">PNG (bahut bhari)</option>
-        <option value="image/webp">WEBP</option>
-      </select>
-    </label>
-    <label>Sharpness<br>
-      <select id="sharp">
-        <option value="0">Off</option>
-        <option value="0.4" selected>Halka</option>
-        <option value="0.8">Strong</option>
-      </select>
-    </label>
-    <label>Ek ZIP me images<br>
-      <select id="part">
-        <option value="20">20</option>
-        <option value="30" selected>30</option>
-        <option value="50">50</option>
-        <option value="100">100</option>
-        <option value="200">200</option>
-        <option value="100000">Sab ek ZIP me (bahut RAM lagegi)</option>
-      </select>
   let zip = null, inPart = 0, partNo = 1, done = 0, failed = [];
 
   async function flush() {
@@ -102,7 +76,7 @@
   await flush();
   $('ptext').textContent = 'Ho gaya! ' + (total - failed.length) + ' images 4K me ban gayi.' +
     (failed.length ? ' Fail: ' + failed.length + ' (' + failed.slice(0, 3).join(', ') + (failed.length > 3 ? '...' : '') + ')' : '');
-  jobs = []; $('sources').innerHTML = '';
+  jobs = []; $('sources').innerHTML = ''; go.textContent = '4K banao';
 };
 </script>
 </body>
