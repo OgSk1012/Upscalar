@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#0b1019"><title>PixelBoost 5 — AI Image Studio</title>
+<style>
+:root{color-scheme:dark;--bg:#0b1019;--panel:#141d2b;--panel2:#1c293b;--line:#30425b;--txt:#edf4ff;--muted:#9babc2;--blue:#79adff;--green:#55d8a9;--amber:#ffd17d;--red:#ff8585}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 10% 0%,#1c3150 0,transparent 40%),var(--bg);color:var(--txt);font:15px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+.wrap{max-width:1160px;margin:auto;padding:25px 17px 60px}header{display:flex;justify-content:space-between;gap:18px;margin-bottom:20px}h1{font-size:clamp(1.8rem,4vw,2.6rem);letter-spacing:-.05em;line-height:1.1;margin:0 0 8px}.sub{color:var(--muted);margin:0;max-width:760px}.pill{border:1px solid #315c50;color:#8df0c7;background:#123128;padding:7px 11px;border-radius:99px;font-size:.75rem;white-space:nowrap;height:max-content}
+.panel{background:linear-gradient(180deg,#172131,#121a27);border:1px solid var(--line);border-radius:17px;padding:17px;margin:14px 0;box-shadow:0 12px 35px #0002}
+#drop{display:block;border:2px dashed #4a5c77;border-radius:14px;padding:28px 16px;text-align:center;background:#101824;cursor:pointer}#drop.over{border-color:var(--blue);background:#17253b}#drop strong{display:block;font-size:1.08rem;margin-bottom:5px}#drop span{color:var(--muted);font-size:.84rem}#file{display:none}
+.actions{display:flex;flex-wrap:wrap;gap:9px;margin-top:12px}button,select,input[type=number],input[type=text]{font:inherit;color:var(--txt);background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px 12px}button{cursor:pointer;font-weight:650}button.primary{background:var(--blue);color:#081326;border-color:var(--blue)}button.good{background:#176447;border-color:#287b5d}button.danger{color:#ffb0b0;border-color:#74414a}button:disabled{opacity:.4;cursor:not-allowed}
+.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.field{display:flex;flex-direction:column;gap:6px;min-width:0}.field label{font-size:.8rem;color:var(--muted)}.field small{font-size:.72rem;color:var(--muted)}select,input[type=number],input[type=text]{width:100%}input[type=range]{width:100%;accent-color:var(--blue)}.check{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:.84rem}.check input{accent-color:var(--blue)}
+.section{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:0 0 13px}.section h2{font-size:1.02rem;margin:0}.muted{color:var(--muted)}.small{font-size:.79rem}.divider{height:1px;background:var(--line);margin:15px 0}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin:13px 0}.stat{background:#101824;border:1px solid var(--line);padding:10px;border-radius:11px}.stat b{display:block;font-size:1.15rem}.stat span{font-size:.72rem;color:var(--muted)}
+.list{display:grid;gap:7px}.item{display:grid;grid-template-columns:24px 44px minmax(0,1fr) auto;gap:10px;align-items:center;background:#101824;border:1px solid #29394f;border-radius:11px;padding:7px}.queuecheck{width:17px;height:17px;accent-color:var(--blue);cursor:pointer}.thumb{width:44px;height:44px;object-fit:cover;border-radius:7px;background:#26354a}.fname{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600;font-size:.84rem}.meta{color:var(--muted);font-size:.72rem}.tag{font-size:.68rem;color:#b9d0ff;border:1px solid #354c70;padding:3px 7px;border-radius:20px}
+.progress{height:10px;border-radius:20px;background:#29374c;overflow:hidden;margin:12px 0 7px}.progress>div{height:100%;width:0;background:linear-gradient(90deg,#6098ff,#55dbb0);transition:width .15s}#status{color:var(--muted);font-size:.84rem;min-height:1.4em}
+.note{border-left:3px solid var(--amber);padding:9px 12px;background:#292315;color:#ead6a9;border-radius:0 9px 9px 0;font-size:.78rem;margin-top:12px}.oknote{border-color:var(--green);background:#10271f;color:#b4f1d9}
+.previewGrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.previewCard{background:#0f1723;border:1px solid var(--line);border-radius:12px;padding:9px;min-width:0}.previewCard h3{font-size:.8rem;margin:0 0 8px;color:var(--muted)}.previewCard canvas{width:100%;max-height:300px;object-fit:contain;background:repeating-conic-gradient(#283346 0% 25%,#1a2534 0% 50%) 50%/18px 18px;border-radius:8px}.result{display:flex;justify-content:space-between;align-items:center;gap:12px;background:#10241e;border:1px solid #245541;border-radius:11px;padding:10px;margin-top:8px}.result a{color:#8df0c7;text-decoration:none;font-weight:700;white-space:nowrap}.hidden{display:none!important}
+footer{text-align:center;color:var(--muted);font-size:.74rem;margin-top:22px}a{color:#9fc4ff}
+@media(max-width:760px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.stats{grid-template-columns:repeat(2,1fr)}header{display:block}.pill{display:inline-block;margin-top:12px}}
+@media(max-width:450px){.wrap{padding:17px 10px 42px}.panel{padding:12px}.previewGrid{grid-template-columns:1fr}}
+</style></head>
+<body><main class="wrap">
+<header><div><h1>PixelBoost <span style="color:#83b4ff">5.0</span></h1><p class="sub">AI super-resolution, background removal, print checks and batch ZIP export — designed to run on your device, not upload your artwork to a server.</p></div><div class="pill">PRIVATE · BROWSER-BASED</div></header>
+
+<section class="panel">
+<label id="drop" for="files"><strong>Drop images or ZIP archives here</strong><span>PNG · JPG · WEBP · AVIF · BMP · GIF (first frame) · ZIP with folders</span><br><span>Tap to browse · Multiple files and ZIP batches supported</span></label><input id="files" type="file" accept="image/*,.zip,application/zip" multiple>
+<div class="actions"><button id="add" class="primary">＋ Add images</button><button id="selectAll" disabled>Select all</button><button id="removeSelected" class="danger" disabled>Remove selected (0)</button><button id="clear" class="danger" disabled>Clear queue</button><button id="removeFailed" disabled>Remove failed</button><span id="loadStatus" class="muted small"></span></div>
+<div class="stats"><div class="stat"><b id="queued">0</b><span>Queued</span></div><div class="stat"><b id="sourceSize">0 MB</b><span>Source size</span></div><div class="stat"><b id="completed">0</b><span>Completed</span></div><div class="stat"><b id="failedCount">0</b><span>Failed</span></div></div><div id="queue" class="list"></div>
+</section>
+
+<section class="panel">
+<div class="section"><h2>1 · Processing mode</h2><span class="muted small">Choose one main operation</span></div>
+<div class="grid">
+<div class="field"><label for="operation">Operation</label><select id="operation"><option value="ai">AI Upscale · Real-ESRGAN 4×</option><option value="remove">AI Background Removal · MODNet</option><option value="resize">Standard resize / convert</option><option value="both">Background remove + 4× AI upscale</option></select></div>
+<div class="field"><label for="aiBackend">AI compute</label><select id="aiBackend"><option value="auto">Auto · GPU then CPU fallback</option><option value="webgpu">GPU only · fastest when supported</option><option value="wasm">CPU / WASM · slow</option></select></div>
+<div class="field"><label for="tile">AI tile size</label><select id="tile"><option value="128">128 · lowest memory</option><option value="192">192 · balanced</option><option value="256" selected>256 · maximum</option></select><small class="muted">Maximum tile size: 256. Larger tiles are disabled for this build to match your device limit.</small></div>
+<div class="field"><label for="maxMP">Output memory guard</label><select id="maxMP"><option value="16">16 MP · low RAM</option><option value="32" selected>32 MP · balanced</option><option value="60">60 MP · high RAM</option><option value="100">100 MP · very high RAM</option></select></div>
+</div>
+<div class="actions"><button id="loadAI" class="primary">Load AI models</button><span id="modelStatus" class="muted small">AI models are downloaded only when you load them.</span></div>
+<div class="note">First AI use downloads model files: Real-ESRGAN x4plus FP16 is about 34 MB; MODNet is about 110 MB. This build loads the WebGPU-enabled ONNX Runtime bundle and uses larger tiles to reduce inference overhead. Check the model status: “GPU acceleration active” is the fast path; “CPU/WASM fallback active” will be much slower. WebGPU needs a supported browser, graphics driver and secure context (localhost is recommended).</div>
+<div class="divider"></div>
+<div class="section"><h2>2 · Standard resize / export settings</h2></div>
+<div class="grid">
+<div class="field"><label for="preset">Canvas preset</label><select id="preset"><option value="3840x2160">4K UHD · 3840 × 2160</option><option value="2160x3840">4K portrait · 2160 × 3840</option><option value="3000x3000">Square · 3000 × 3000</option><option value="4500x5400">Redbubble portrait · 4500 × 5400</option><option value="custom">Custom</option></select></div>
+<div class="field"><label for="width">Width (px)</label><input id="width" type="number" min="1" max="12000" value="3840"></div>
+<div class="field"><label for="height">Height (px)</label><input id="height" type="number" min="1" max="12000" value="2160"></div>
+<div class="field"><label for="fit">Fit mode</label><select id="fit"><option value="contain">Contain · no crop</option><option value="cover">Cover · crop</option><option value="stretch">Stretch · distort</option></select></div>
+<div class="field"><label for="format">Output format</label><select id="format"><option value="image/png">PNG · lossless</option><option value="image/jpeg">JPEG</option><option value="image/webp">WEBP</option></select></div>
+<div class="field"><label for="quality">JPEG / WEBP quality <b id="qualityLabel">92%</b></label><input id="quality" type="range" min="55" max="100" value="92"></div>
+<div class="field"><label for="background">Background fill</label><select id="background"><option value="transparent">Transparent</option><option value="#ffffff">White</option><option value="#000000">Black</option></select></div>
+<div class="field"><label for="sharpen">Standard sharpen</label><select id="sharpen"><option value="0">Off</option><option value=".2">Light</option><option value=".4" selected>Medium</option><option value=".65">Strong</option></select></div>
+</div>
+<div class="actions"><label class="check"><input type="checkbox" id="preserveAlpha" checked> Preserve transparency</label><label class="check"><input type="checkbox" id="folder" checked> Keep ZIP folder structure</label></div>
+<div class="divider"></div>
+<div class="section"><h2>3 · Print quality analyzer</h2></div>
+<div class="grid">
+<div class="field"><label for="dpi">Target print DPI</label><select id="dpi"><option>300</option><option>240</option><option>200</option><option>150</option></select></div>
+<div class="field"><label for="zipPart">Images per ZIP part</label><input id="zipPart" type="number" min="1" max="250" value="30"></div>
+<div class="field"><label for="suffix">Filename suffix</label><input id="suffix" type="text" value="-pixelboost" maxlength="24"></div>
+<div class="field"><label for="exportMode">Export</label><select id="exportMode"><option value="zip">Split ZIP batches</option><option value="files">Individual files</option></select></div>
+</div>
+<div id="printInfo" class="note">Select an image in the queue to see estimated print size and aspect ratio.</div>
+</section>
+
+<section class="panel">
+<div class="section"><h2>4 · Preview & comparison</h2><span class="muted small">Select an image from queue</span></div>
+<div class="previewGrid"><div class="previewCard"><h3>Original</h3><canvas id="before" width="8" height="8"></canvas></div><div class="previewCard"><h3>Processed output</h3><canvas id="after" width="8" height="8"></canvas></div></div>
+<div id="previewMeta" class="muted small" style="margin-top:8px">No image selected.</div>
+</section>
+
+<section class="panel">
+<div class="section"><h2>5 · Batch processing</h2><span id="pct" class="muted small">0%</span></div>
+<div class="progress"><div id="bar"></div></div><div id="status" role="status" aria-live="polite">Add images to begin.</div>
+<div class="actions"><button id="start" class="primary" disabled>Start batch</button><button id="cancel" disabled>Cancel after current image</button><button id="downloadAll" class="good hidden">Download ZIP parts one by one</button></div><div id="results"></div>
+<div class="note oknote">Your source images are processed locally in this tab. AI model files are fetched from Hugging Face/CDN when requested. This is not a server-side upload service.</div>
+</section>
+<footer>PixelBoost 5.0 · Real-ESRGAN x4plus (BSD-3-Clause) · MODNet (Apache-2.0) · Models and runtime are third-party open-source components.</footer>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/onnxruntime-web@1.22.0/dist/ort.webgpu.min.js"></script>
+<script>
+(()=>{'use strict';
+const $=id=>document.getElementById(id);
+const S={jobs:[],keys:new Set(),urls:[],results:[],failed:[],done:0,total:0,running:false,cancel:false,selected:null,selectedKeys:new Set(),skipKeys:new Set(),esr:null,remover:null,ortProvider:'',transformers:null};
+const IMAGE=/\.(jpe?g|png|webp|gif|bmp|avif)$/i,EXT={'image/png':'png','image/jpeg':'jpg','image/webp':'webp'};
+const bytes=n=>n<1048576?(n/1024).toFixed(0)+' KB':(n/1048576).toFixed(2)+' MB';
+const safe=s=>s.replace(/[<>:"|?*\x00-\x1f]/g,'_').replace(/^\/+/,'');
+function stats(){
+ $('queued').textContent=S.jobs.length;$('sourceSize').textContent=bytes(S.jobs.reduce((a,j)=>a+j.size,0));$('completed').textContent=S.done;$('failedCount').textContent=S.failed.length;
+ $('clear').disabled=!S.jobs.length||S.running;$('start').disabled=!S.jobs.length||S.running;$('removeFailed').disabled=!S.failed.length||S.running;
+ const selected=S.jobs.filter(j=>S.selectedKeys.has(j.key)).length;
+ $('removeSelected').disabled=!selected;$('removeSelected').textContent=S.running?`Skip selected (${selected})`:`Remove selected (${selected})`;
+ $('selectAll').disabled=!S.jobs.length;$('selectAll').textContent=selected===S.jobs.length&&S.jobs.length?'Clear selection':'Select all';
+}
+function renderQueue(){
+ const q=$('queue');q.innerHTML='';
+ S.jobs.slice(0,140).forEach((j,i)=>{
+  const row=document.createElement('div');row.className='item';row.style.cursor='pointer';
+  const check=document.createElement('input');check.type='checkbox';check.className='queuecheck';check.checked=S.selectedKeys.has(j.key);check.setAttribute('aria-label','Select '+j.name);
+  check.onchange=e=>{e.stopPropagation();if(check.checked)S.selectedKeys.add(j.key);else S.selectedKeys.delete(j.key);stats()};
+  const im=document.createElement('img');im.className='thumb';im.alt='';im.src=j.preview||'';
+  const d=document.createElement('div');d.style.minWidth='0';const n=document.createElement('div');n.className='fname';n.textContent=j.name;
+  const m=document.createElement('div');m.className='meta';m.textContent=bytes(j.size)+(S.skipKeys.has(j.key)?' · marked to skip':'');d.append(n,m);
+  const t=document.createElement('span');t.className='tag';t.textContent=j.zip?'ZIP':'FILE';row.append(check,im,d,t);row.onclick=()=>selectPreview(i);check.onclick=e=>e.stopPropagation();q.append(row);
+ });
+ if(S.jobs.length>140){const p=document.createElement('p');p.className='muted small';p.textContent=`Showing first 140 of ${S.jobs.length} queued images.`;q.append(p)}
+ stats();
+}
+function addJob(name,blob,zip){const key=name+'|'+blob.size+'|'+(blob.lastModified||0);if(!blob.size||S.keys.has(key))return;S.keys.add(key);S.jobs.push({name:safe(name),blob,size:blob.size,zip,preview:''})}
+async function ingest(files){$('loadStatus').textContent='Reading…';let n=0;for(const f of files){if(f.name.toLowerCase().endsWith('.zip')||f.type==='application/zip'){if(!window.JSZip){alert('ZIP library unavailable. Reload with internet access.');continue}try{const z=await JSZip.loadAsync(f);for(const e of Object.values(z.files).filter(x=>!x.dir&&IMAGE.test(x.name))){addJob(e.name,await e.async('blob'),true);n++}}catch(err){console.error(err);alert('Could not open '+f.name)}}else if(f.type.startsWith('image/')||IMAGE.test(f.name)){addJob(f.name,f,false);n++}}
+for(const j of S.jobs.slice(0,140))if(!j.preview){j.preview=URL.createObjectURL(j.blob);S.urls.push(j.preview)}renderQueue();$('loadStatus').textContent=n?`${n} image entries added.`:'No supported images found.';if(S.jobs.length&&!S.selected)selectPreview(0)}
+function canvasFromImage(img,max=900){const scale=Math.min(1,max/Math.max(img.width||img.naturalWidth,img.height||img.naturalHeight));const c=document.createElement('canvas');c.width=Math.max(1,Math.round((img.width||img.naturalWidth)*scale));c.height=Math.max(1,Math.round((img.height||img.naturalHeight)*scale));c.getContext('2d').drawImage(img,0,0,c.width,c.height);return c}
+async function decode(blob){if('createImageBitmap'in window)return createImageBitmap(blob,{imageOrientation:'from-image'});return new Promise((res,rej)=>{const u=URL.createObjectURL(blob),im=new Image();im.onload=()=>{URL.revokeObjectURL(u);res(im)};im.onerror=()=>{URL.revokeObjectURL(u);rej(Error('Image decode failed'))};im.src=u})}
+async function selectPreview(i){const job=S.jobs[i];if(!job)return;S.selected=i;try{const im=await decode(job.blob),c=canvasFromImage(im);const b=$('before');b.width=c.width;b.height=c.height;b.getContext('2d').clearRect(0,0,b.width,b.height);b.getContext('2d').drawImage(c,0,0);$('after').width=8;$('after').height=8;$('previewMeta').textContent=job.name+' · '+im.width+' × '+im.height+' px';const dpi=Number($('dpi').value),w=im.width/dpi,h=im.height/dpi,ratio=im.width/im.height;$('printInfo').textContent=`${im.width} × ${im.height} px · ${ratio.toFixed(3)} aspect ratio · approx. ${w.toFixed(2)} × ${h.toFixed(2)} inches at ${dpi} DPI (${(w*2.54).toFixed(1)} × ${(h*2.54).toFixed(1)} cm).`;if(im.close)im.close()}catch(e){$('previewMeta').textContent='Preview unavailable: '+e.message}}
+function showOutput(blob){decode(blob).then(im=>{const c=canvasFromImage(im);const a=$('after');a.width=c.width;a.height=c.height;a.getContext('2d').drawImage(c,0,0);$('previewMeta').textContent+=' · Output preview updated';if(im.close)im.close()}).catch(()=>{})}
+$('dpi').onchange=()=>{if(S.selected!==null)selectPreview(S.selected)};
+function setModelStatus(s){$('modelStatus').textContent=s}
+async function loadAI(){if(S.esr&&S.remover){setModelStatus('Both AI models loaded.');return}if(!window.ort){setModelStatus('ONNX Runtime failed to load. Check internet and reload.');return}
+$('loadAI').disabled=true;try{
+ if(['ai','both'].includes($('operation').value)&&!S.esr){setModelStatus('Downloading Real-ESRGAN x4plus FP16 model (~34 MB)…');window.ort.env.wasm.wasmPaths='https://cdn.jsdelivr.net/npm/onnxruntime-web@1.22.0/dist/';window.ort.env.wasm.numThreads=Math.max(1,Math.min(4,navigator.hardwareConcurrency||4));const url='https://huggingface.co/othytenk/realesrgan-x4plus/resolve/main/realesrgan_x4plus_fp16.onnx';const buf=await(await fetch(url)).arrayBuffer();if(!buf.byteLength)throw Error('Upscaler model download was empty.');const backend=$('aiBackend').value;let providers=backend==='wasm'?['wasm']:backend==='webgpu'?['webgpu']:['webgpu','wasm'];let last;for(const ep of providers){try{S.esr=await ort.InferenceSession.create(buf,{executionProviders:[ep]});S.ortProvider=ep;break}catch(e){last=e;console.warn(ep,e)}}if(!S.esr)throw last||Error('Could not initialize Real-ESRGAN');}
+ if(['remove','both'].includes($('operation').value)&&!S.remover){setModelStatus('Loading MODNet background-removal model (~110 MB)…');const mod=await import('https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.7.2');S.transformers=mod;S.remover=await mod.pipeline('background-removal','Xenova/modnet',{dtype:'q8'});}
+ setModelStatus('AI ready · '+(S.ortProvider==='webgpu'?'GPU acceleration active':S.ortProvider==='wasm'?'CPU/WASM fallback active':'MODNet ready')+'.');
+ }catch(e){console.error(e);setModelStatus('Model error: '+e.message);alert('Could not load AI model. Try CPU/WASM or reload the page. '+e.message)}finally{$('loadAI').disabled=false}}
+function imageToTensor(data,w,h){const plane=w*h,arr=new Float32Array(3*plane);for(let i=0;i<plane;i++){arr[i]=data[i*4]/255;arr[plane+i]=data[i*4+1]/255;arr[plane*2+i]=data[i*4+2]/255}return new ort.Tensor('float32',arr,[1,3,h,w])}
+async function aiUpscale(blob){if(!S.esr)await loadAI();if(!S.esr)throw Error('AI upscaler is not loaded.');const im=await decode(blob),iw=im.width||im.naturalWidth,ih=im.height||im.naturalHeight,ow=iw*4,oh=ih*4;if(ow*oh>Number($('maxMP').value)*1e6)throw Error(`4× output is ${(ow*oh/1e6).toFixed(1)} MP; above selected safety limit. Choose a higher limit or standard resize first.`);const src=document.createElement('canvas');src.width=iw;src.height=ih;const sc=src.getContext('2d',{willReadFrequently:true});sc.drawImage(im,0,0);if(im.close)im.close();const pixels=sc.getImageData(0,0,iw,ih).data;const out=document.createElement('canvas');out.width=ow;out.height=oh;const oc=out.getContext('2d',{alpha:false});const tile=Number($('tile').value),pad=8;const total=Math.ceil(iw/tile)*Math.ceil(ih/tile);let done=0;
+for(let y=0;y<ih;y+=tile){for(let x=0;x<iw;x+=tile){if(S.cancel)throw Error('Cancelled');const x0=Math.max(0,x-pad),y0=Math.max(0,y-pad),x1=Math.min(iw,x+tile+pad),y1=Math.min(ih,y+tile+pad),tw=x1-x0,th=y1-y0;const tileData=new Uint8ClampedArray(tw*th*4);for(let yy=0;yy<th;yy++){const start=((y0+yy)*iw+x0)*4;tileData.set(pixels.subarray(start,start+tw*4),yy*tw*4)}const t=imageToTensor(tileData,tw,th);const outputs=await S.esr.run({input:t});const tensor=outputs.output||outputs[Object.keys(outputs)[0]],od=tensor.data,shape=tensor.dims,ohh=shape[2],oww=shape[3],left=(x-x0)*4,top=(y-y0)*4,coreW=Math.min(tile,iw-x)*4,coreH=Math.min(tile,ih-y)*4;const rgba=new Uint8ClampedArray(coreW*coreH*4);for(let yy=0;yy<coreH;yy++){const sy=(top+yy)*oww+left;for(let xx=0;xx<coreW;xx++){const si=sy+xx,di=(yy*coreW+xx)*4;rgba[di]=Math.max(0,Math.min(255,Math.round(od[si]*255)));rgba[di+1]=Math.max(0,Math.min(255,Math.round(od[ohh*oww+si]*255)));rgba[di+2]=Math.max(0,Math.min(255,Math.round(od[2*ohh*oww+si]*255)));rgba[di+3]=255}}const tileCanvas=document.createElement('canvas');tileCanvas.width=coreW;tileCanvas.height=coreH;tileCanvas.getContext('2d').putImageData(new ImageData(rgba,coreW,coreH),0,0);oc.drawImage(tileCanvas,x*4,y*4);done++;$('status').textContent=`AI upscaling tiles ${done}/${total} · ${Math.round(done/total*100)}%`;}}
+const b=await new Promise((res,rej)=>out.toBlob(v=>v?res(v):rej(Error('AI output encode failed')),'image/png'));src.width=src.height=out.width=out.height=1;return b}
+async function removeBG(blob){if(!S.remover)await loadAI();if(!S.remover)throw Error('Background model not loaded.');const inputURL=URL.createObjectURL(blob);try{const output=await S.remover(inputURL);const raw=output[0];const maskCanvas=raw.toCanvas();const original=await decode(blob),w=original.width||original.naturalWidth,h=original.height||original.naturalHeight;const c=document.createElement('canvas');c.width=w;c.height=h;const ctx=c.getContext('2d');ctx.drawImage(original,0,0,w,h);if(original.close)original.close();const m=document.createElement('canvas');m.width=w;m.height=h;m.getContext('2d').drawImage(maskCanvas,0,0,w,h);const src=ctx.getImageData(0,0,w,h),mask=m.getContext('2d').getImageData(0,0,w,h);for(let i=0;i<src.data.length;i+=4)src.data[i+3]=mask.data[i];ctx.putImageData(src,0,0);return await new Promise((res,rej)=>c.toBlob(b=>b?res(b):rej(Error('PNG encode failed')),'image/png'))}finally{URL.revokeObjectURL(inputURL)}}
+async function standard(blob){const im=await decode(blob),iw=im.width||im.naturalWidth,ih=im.height||im.naturalHeight,tw=Number($('width').value),th=Number($('height').value);if(!Number.isInteger(tw)||!Number.isInteger(th)||tw<1||th<1||tw>12000||th>12000)throw Error('Target dimensions must be 1–12,000 px.');if(tw*th>Number($('maxMP').value)*1e6)throw Error('Standard output exceeds selected memory guard.');const type=$('format').value,c=document.createElement('canvas');c.width=tw;c.height=th;const ctx=c.getContext('2d',{alpha:true});const trans=$('background').value==='transparent'&&type==='image/png'&&$('preserveAlpha').checked;if(!trans){ctx.fillStyle=$('background').value==='transparent'?'#fff':$('background').value;ctx.fillRect(0,0,tw,th)}let dw=tw,dh=th,dx=0,dy=0;if($('fit').value!=='stretch'){const k=$('fit').value==='cover'?Math.max(tw/iw,th/ih):Math.min(tw/iw,th/ih);dw=iw*k;dh=ih*k;dx=(tw-dw)/2;dy=(th-dh)/2}ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';ctx.drawImage(im,dx,dy,dw,dh);if(im.close)im.close();const b=await new Promise((res,rej)=>c.toBlob(v=>v?res(v):rej(Error('Canvas export failed')),type,Number($('quality').value)/100));c.width=c.height=1;return b}
+async function runOne(job){const op=$('operation').value;let blob=job.blob,ext='png';if(op==='ai')blob=await aiUpscale(blob);else if(op==='remove')blob=await removeBG(blob);else if(op==='both'){blob=await removeBG(blob);blob=await aiUpscale(blob)}else{blob=await standard(blob);ext=EXT[$('format').value]}return{blob,ext}}
+function progress(){const p=S.total?Math.round(S.done/S.total*100):0;$('bar').style.width=p+'%';$('pct').textContent=p+'%';stats()}
+function addResult(blob,name,label){const url=URL.createObjectURL(blob);S.urls.push(url);S.results.push({url,name});const row=document.createElement('div');row.className='result';const t=document.createElement('span');t.textContent=label+' · '+bytes(blob.size);const a=document.createElement('a');a.href=url;a.download=name;a.textContent='Download';row.append(t,a);$('results').append(row);if(S.selected!==null)showOutput(blob)}
+async function batch(){if(S.running||!S.jobs.length)return;if($('exportMode').value==='zip'&&!window.JSZip){alert('ZIP library unavailable. Reload online or choose individual files.');return}const op=$('operation').value;if(op!=='resize'&&(!S.esr&&['ai','both'].includes(op)||!S.remover&&['remove','both'].includes(op))){await loadAI();if((['ai','both'].includes(op)&&!S.esr)||(['remove','both'].includes(op)&&!S.remover))return}
+S.running=true;S.cancel=false;S.done=0;S.failed=[];S.results=[];S.total=S.jobs.length;$('results').innerHTML='';$('start').disabled=true;$('cancel').disabled=false;$('clear').disabled=true;$('downloadAll').classList.add('hidden');progress();let zip=null,part=0,partNo=1;const max=Math.max(1,Math.min(250,Number($('zipPart').value)||30)),names=new Set();
+async function flush(){if(!zip||!part)return;$('status').textContent=`Building ZIP part ${partNo}…`;const b=await zip.generateAsync({type:'blob',compression:'DEFLATE',compressionOptions:{level:2}});addResult(b,`pixelboost-part-${String(partNo).padStart(3,'0')}.zip`,`${part} images · ZIP ${partNo}`);zip=null;part=0;partNo++}
+try{for(const job of S.jobs){if(S.cancel)break;if(S.skipKeys.has(job.key)){S.done++;$('status').textContent=`Skipped: ${job.name}`;progress();continue}$('status').textContent=`${S.done+1}/${S.total} · ${job.name}`;await new Promise(r=>setTimeout(r,0));if(S.skipKeys.has(job.key)){S.done++;$('status').textContent=`Skipped: ${job.name}`;progress();continue}try{const x=await runOne(job),base=job.name.replace(/\.[^.]+$/,'')+($('suffix').value||'-pixelboost'),keep=$('folder').checked;let name=(keep?base:base.split('/').pop())+'.'+x.ext,candidate=name,n=2;while(names.has(candidate.toLowerCase()))candidate=base+'-'+n+++'.'+x.ext;names.add(candidate.toLowerCase());if($('exportMode').value==='zip'){if(!zip)zip=new JSZip();zip.file(candidate,x.blob);part++;if(part>=max)await flush()}else addResult(x.blob,candidate.split('/').pop(),job.name)}catch(e){console.error(e);S.failed.push({name:job.name,error:e.message})}S.done++;progress()}if($('exportMode').value==='zip')await flush();$('status').textContent=S.cancel?`Cancelled after ${S.done}/${S.total}.`:`Finished: ${S.done-S.failed.length} succeeded, ${S.failed.length} failed.`}catch(e){console.error(e);$('status').textContent='Batch error: '+e.message}finally{S.running=false;$('cancel').disabled=true;$('start').disabled=!S.jobs.length;$('clear').disabled=!S.jobs.length;$('removeFailed').disabled=!S.failed.length;if(S.results.length)$('downloadAll').classList.remove('hidden');if(S.failed.length){const n=document.createElement('div');n.className='note';n.textContent='Failed: '+S.failed.map(x=>x.name+' — '+x.error).join(' | ');$('results').append(n)}stats()}}
+$('add').onclick=()=>$('files').click();$('files').onchange=e=>{ingest([...e.target.files]);e.target.value=''};$('drop').ondragover=e=>{e.preventDefault();$('drop').classList.add('over')};$('drop').ondragleave=()=>$('drop').classList.remove('over');$('drop').ondrop=e=>{e.preventDefault();$('drop').classList.remove('over');ingest([...e.dataTransfer.files])};
+$('preset').onchange=()=>{if($('preset').value!=='custom'){const[w,h]=$('preset').value.split('x');$('width').value=w;$('height').value=h}};$('quality').oninput=()=>$('qualityLabel').textContent=$('quality').value+'%';$('loadAI').onclick=loadAI;$('start').onclick=batch;$('cancel').onclick=()=>{S.cancel=true;$('status').textContent='Cancellation requested; stopping after current tile/image.'};
+$('operation').onchange=()=>{S.esr=null;S.remover=null;S.transformers=null;setModelStatus('Load models for the selected AI operation.')};
+$('selectAll').onclick=()=>{const all=S.jobs.length&&S.jobs.every(j=>S.selectedKeys.has(j.key));if(all)S.selectedKeys.clear();else S.jobs.forEach(j=>S.selectedKeys.add(j.key));renderQueue()};
+$('removeSelected').onclick=()=>{
+ const chosen=S.jobs.filter(j=>S.selectedKeys.has(j.key));
+ if(!chosen.length)return;
+ if(S.running){
+  chosen.forEach(j=>S.skipKeys.add(j.key));
+  $('status').textContent=`${chosen.length} selected image(s) marked to skip. Current image, if already running, will finish.`;
+ }else{
+  const gone=new Set(chosen.map(j=>j.key));
+  S.jobs=S.jobs.filter(j=>!gone.has(j.key));
+  S.selectedKeys.clear();S.skipKeys.clear();
+  if(S.selected!==null&&S.selected>=S.jobs.length)S.selected=S.jobs.length?S.jobs.length-1:null;
+  $('loadStatus').textContent=`Removed ${chosen.length} image(s) from the batch.`;
+ }
+ renderQueue();
+};
+$('clear').onclick=()=>{if(S.running)return;S.jobs=[];S.keys.clear();S.selectedKeys.clear();S.skipKeys.clear();S.selected=null;S.done=0;S.failed=[];S.results=[];S.urls.forEach(URL.revokeObjectURL);S.urls=[];$('queue').innerHTML='';$('results').innerHTML='';$('status').textContent='Queue cleared.';$('bar').style.width='0';$('pct').textContent='0%';$('previewMeta').textContent='No image selected.';stats()};
+$('removeFailed').onclick=()=>{const bad=new Set(S.failed.map(x=>x.name));S.jobs=S.jobs.filter(j=>!bad.has(j.name));S.failed=[];S.selectedKeys.clear();renderQueue()};
+$('downloadAll').onclick=async()=>{for(const r of S.results){const a=document.createElement('a');a.href=r.url;a.download=r.name;document.body.append(a);a.click();a.remove();await new Promise(ok=>setTimeout(ok,900))}};
+addEventListener('beforeunload',()=>S.urls.forEach(URL.revokeObjectURL));if(!('gpu' in navigator))setModelStatus('WebGPU not detected in this browser context. AI may use slow CPU/WASM. Try current Chrome/Edge over localhost.');stats();
+})();
+</script></body></html>
